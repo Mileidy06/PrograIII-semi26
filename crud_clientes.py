@@ -1,31 +1,29 @@
-from mysql.connector.errors import Error
-import conexion
+from conexion import Conexion
 
-db = conexion.Conexion()
+class CRUDCliente:
+    def __init__(self):
+        self.db = Conexion()
 
-class crud_clientes:
-    def consultar(self, buscar):
-        return db.consultar(f"SELECT * FROM cliente WHERE nombre LIKE '%{buscar}%'")
+    def registrar_cliente(self, datos):
+        sql = """
+            INSERT INTO clientes (nombre, nit, nrc, tipo_empresa, direccion, telefono, email)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        valores = (
+            datos.get('nombre'),
+            datos.get('nit'),
+            datos.get('nrc'),
+            datos.get('tipo_empresa'),
+            datos.get('direccion'),
+            datos.get('telefono'),
+            datos.get('email')
+        )
+        return self.db.ejecutar(sql, valores)
 
-    def administrar(self, datos):
-        try:
-            if datos['accion'] == 'nuevo':
-                sql = """
-                    INSERT INTO cliente(codigo,nombre,direccion,telefono,email,tipo)
-                    VALUES(%s,%s,%s,%s,%s,%s)
-                """
-                valores = (datos['codigo'], datos['nombre'], datos['direccion'], datos['telefono'], datos['email'], datos['tipo'])
-            elif datos['accion'] == 'modificar':
-                sql = """
-                    UPDATE cliente SET codigo=%s,nombre=%s,direccion=%s,telefono=%s,email=%s,tipo=%s
-                    WHERE id_cliente=%s
-                """
-                valores = (datos['codigo'], datos['nombre'], datos['direccion'], datos['telefono'], datos['email'], datos['tipo'], datos['idCliente'])
-            else:
-                sql = """
-                    DELETE FROM cliente WHERE id_cliente=%s
-                """
-                valores = (datos['idCliente'],)
-            return db.ejecutar(sql, valores)
-        except Error as e:
-            return f"Error al guardar el cliente: {e}"
+    def obtener_clientes(self):
+        sql = "SELECT * FROM clientes ORDER BY id_cliente DESC"
+        return self.db.consultar(sql)
+
+    def buscar_cliente_por_nit(self, nit):
+        sql = "SELECT * FROM clientes WHERE nit = %s"
+        return self.db.consultar(sql, (nit,))
