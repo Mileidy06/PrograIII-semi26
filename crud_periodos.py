@@ -1,73 +1,110 @@
 import math
+from datetime import datetime
 from conexion import Conexion
 
 class CRUDPeriodos:
     def __init__(self):
         self.db = Conexion()
 
-    def calcular_impuesto(self, tipo_empresa, monto_activos, monto_ingresos):
-        activos = float(monto_activos)
-        ingresos = float(monto_ingresos)
-        impuesto = 0.0
+    def obtener_productos_activos(self):
+        sql = "SELECT * FROM productos WHERE activo = 1 ORDER BY nombre ASC"
+        return self.db.consultar(sql)
 
-        if tipo_empresa == "Natural":
-            if ingresos > 1000:
-                excedente = ingresos - 1000
-                impuesto = excedente * 0.05
-        elif tipo_empresa == "Jurídica":
-            base = max(activos, ingresos)
-            bloques = math.ceil(base / 1000.0)
-            impuesto = bloques * 15.00
-        elif tipo_empresa == "Gran Contribuyente":
-            impuesto = (activos * 0.01) + (ingresos * 0.015)
+    def calcular_impuesto_tarifa(self, codigo_producto, balance):
+        balance = float(balance)
+        
+        # Consultar el rango tarifario exacto de la BD
+        sql = """
+            SELECT * FROM tarifa_impuesto 
+            WHERE codigo_producto = %s AND %s >= desde AND %s <= hasta
+            LIMIT 1
+        """
+        tarifas = self.db.consultar(sql, (codigo_producto, balance, balance))
 
-        return round(impuesto, 2)
+        if not tarifas:
+            return {"error": f"No se encontró una tarifa aplicable para el balance ${balance:,.2f}"}
+
+        tarifa = tarifas[0]
+        precio_base = float(tarifa['precio_base'])
+        adicional = float(tarifa['adicional'])
+        desde = float(tarifa['desde'])
+        
+        excedente = max(0.0, balance - (desde - 0.01))
+        bloques = math.ceil(excedente / 1000.0) if (adicional > 0 and excedente > 0) else 0
+        
+        monto_impuesto = precio_base + (bloques * adicional)
+        
+        if bloques > 0:
+            formula = f"${precio_base:.2f} base + ({bloques} bloques x ${adicional:.2f})"
+        else:
+            formula = f"${precio_base:.2f} base fija"
+
+        return {
+            "precio_base": precio_base,
+            "adicional": adicional,
+            "excedente": excedente,
+            "bloques": bloques,
+            "monto_impuesto": round(monto_impuesto, 2),
+            "formula": formula
+        }
 
     def guardar_periodo(self, datos):
         id_cliente = datos.get('id_cliente')
-        
-        # 1. Buscar cliente por id_cliente
-        sql_cliente = "SELECT tipo_empresa FROM clientes WHERE id_cliente = %s"
-        res_cliente = self.db.consultar(sql_cliente, (id_cliente,))
+        codigo_producto = datos.get('codigo_producto')
+        fecha_desde = datos.get('fecha_desde')
+        fecha_hasta = datos.get('fecha_hasta')
+        balance = float(datos.get('balance', 0))
 
-        if not res_cliente:
-            return {"error": "Cliente no encontrado"}
+        # Validaciones de Fechas
+        if fecha_desde >= fecha_hasta:
+            return {"error": "La fecha 'Desde' debe ser anterior a la fecha 'Hasta'."}
 
-        tipo_empresa = res_cliente[0]['tipo_empresa']
+        # Validar Superposición de Períodos para el mismo cliente
+        sql_overlap = """
+            SELECT COUNT(*) as total FROM periodos_impositivos
+            WHERE id_cliente = %s AND NOT (fecha_hasta < %s OR fecha_desde > %s)
+        """
+        res_overlap = self.db.consultar(sql_overlap, (id_cliente, fecha_desde, fecha_hasta))
+        if res_overlap and res_overlap[0]['total'] > 0:
+            return {"error": "El cliente ya tiene un período registrado que se superpone con este rango de fechas."}
 
-        # 2. Calcular impuesto
-        monto_impuesto = self.calcular_impuesto(
-            tipo_empresa, 
-            datos.get('monto_activos', 0), 
-            datos.get('monto_ingresos', 0)
-        )
+        # Calcular
+        calc = self.calcular_impuesto_tarifa(codigo_producto, balance)
+        if "error" in calc:
+            return calc
 
-        # 3. Insertar registro
+        # Insertar Período
         sql = """
             INSERT INTO periodos_impositivos 
-            (id_cliente, mes, anio, monto_activos, monto_ingresos, monto_impuesto)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            (id_cliente, codigo_producto, fecha_desde, fecha_hasta, balance, precio_base, adicional, excedente, bloques, monto_impuesto, formula_aplicada)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         valores = (
             id_cliente,
-            datos.get('mes'),
-            datos.get('anio'),
-            datos.get('monto_activos', 0),
-            datos.get('monto_ingresos', 0),
-            monto_impuesto
+            codigo_producto,
+            fecha_desde,
+            fecha_hasta,
+            balance,
+            calc['precio_base'],
+            calc['adicional'],
+            calc['excedente'],
+            calc['bloques'],
+            calc['monto_impuesto'],
+            calc['formula']
         )
         res = self.db.ejecutar(sql, valores)
 
         if res == "ok":
-            return {"mensaje": "Período registrado con éxito", "monto_impuesto": monto_impuesto}
+            return {"mensaje": "Período guardado e historial congelado con éxito", "calculo": calc}
         return {"error": res}
 
     def obtener_historial_periodos(self):
         sql = """
-            SELECT p.id_periodo, c.nombre AS nombre_cliente, p.mes, p.anio,
-                   p.monto_activos, p.monto_ingresos, p.monto_impuesto
+            SELECT p.id_periodo, c.nombre AS nombre_cliente, prod.nombre AS producto,
+                   p.fecha_desde, p.fecha_hasta, p.balance, p.monto_impuesto, p.formula_aplicada
             FROM periodos_impositivos p
             INNER JOIN clientes c ON p.id_cliente = c.id_cliente
+            INNER JOIN productos prod ON p.codigo_producto = prod.codigo
             ORDER BY p.id_periodo DESC
         """
         return self.db.consultar(sql)

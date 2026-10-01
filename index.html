@@ -3,176 +3,330 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestión e Impuestos</title>
-    <!-- Bootstrap 5 CSS -->
+    <title>Portal Tributario y Declaraciones</title>
+    <!-- Bootstrap 5 CSS & FontAwesome Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        /* =========================================================
+           TEMA ROSA CON TEXTO Y ETIQUETAS BLANCAS RESALTADAS
+           ========================================================= */
+        :root {
+            --bg-rosa: #ec4899;           /* Fondo principal rosa */
+            --card-rosa: #be185d;         /* Tarjetas rosa profundo */
+            --input-rosa: #9d174d;        /* Campos de texto en rosa oscuro */
+            --accent-btn: #f472b6;        /* Rosa brillante para botones principales */
+            --text-blanco: #ffffff;       /* Texto blanco puro */
+        }
 
-    <!-- Navegación Superior -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="#">Sistema de Declaración de Impuestos</a>
+        body {
+            background-color: var(--bg-rosa) !important;
+            color: var(--text-blanco) !important;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Header / Navbar */
+        header {
+            background-color: #db2777 !important;
+            border-bottom: 2px solid #f472b6 !important;
+        }
+
+        /* Tarjetas y Paneles principales */
+        .card-custom {
+            background-color: var(--card-rosa) !important;
+            border: 1.5px solid #f472b6 !important;
+            border-radius: 12px;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Pestañas de navegación */
+        .nav-pills .nav-link {
+            color: #fbcfe8 !important;
+            background-color: #db2777;
+            margin-right: 8px;
+        }
+        .nav-pills .nav-link.active {
+            background-color: #831843 !important;
+            color: var(--text-blanco) !important;
+            border: 1px solid #f472b6;
+            font-weight: bold;
+        }
+
+        /* RESALTADO DE ETIQUETAS (Código de Cliente *, Nombre *, etc.) */
+        label, .form-label {
+            color: var(--text-blanco) !important;
+            font-weight: 700 !important;
+            font-size: 0.95rem !important;
+            text-shadow: 0px 1px 3px rgba(0, 0, 0, 0.7) !important; /* Sombras para alto impacto */
+            margin-bottom: 4px;
+        }
+
+        /* Campos de Entrada (Inputs, Selects) */
+        .form-control, .form-select {
+            background-color: var(--input-rosa) !important;
+            border: 1.5px solid #fbcfe8 !important;
+            color: var(--text-blanco) !important;
+            font-weight: 600 !important;
+        }
+
+        /* TEXTO DE EJEMPLO/PLACEHOLDER RESALTADO (CLI-001, Empresa S.A., etc.) */
+        .form-control::placeholder {
+            color: #ffffff !important;
+            opacity: 0.85 !important;
+            font-weight: 500;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background-color: #831843 !important;
+            color: var(--text-blanco) !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.3) !important;
+        }
+
+        /* Opciones del Select desplegable */
+        option {
+            background-color: #831843 !important;
+            color: #ffffff !important;
+        }
+
+        /* Títulos y Encabezados */
+        h4, h5, h6, .text-light, .text-info, .text-success {
+            color: var(--text-blanco) !important;
+        }
+
+        /* Tablas */
+        .table-dark-custom {
+            --bs-table-bg: transparent;
+            --bs-table-color: var(--text-blanco);
+            --bs-table-border-color: #db2777;
+        }
+
+        .table-dark-custom th {
+            background-color: #831843 !important;
+            color: var(--text-blanco) !important;
+            border-bottom: 2px solid #f472b6 !important;
+            font-weight: bold;
+        }
+
+        .table-dark-custom td {
+            color: var(--text-blanco) !important;
+        }
+
+        /* Botones de acción */
+        .btn-info, .btn-success {
+            background-color: var(--accent-btn) !important;
+            color: #831843 !important;
+            border: none !important;
+            font-weight: bold !important;
+        }
+
+        .btn-warning {
+            background-color: #f43f5e !important;
+            color: var(--text-blanco) !important;
+            border: none !important;
+            font-weight: bold !important;
+        }
+
+        /* Badge de Servidor Activo */
+        .server-status {
+            background-color: #831843 !important;
+            color: #ffffff !important;
+            border: 1px solid #f472b6 !important;
+        }
+    </style>
+</head>
+<body class="pb-5">
+
+    <!-- Header / Navbar Moderno -->
+    <header class="py-3 px-4 mb-4 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+            <i class="fa-solid fa-file-invoice-dollar text-light fs-3"></i>
+            <h4 class="m-0 fw-bold">Portal Tributario | Módulo de Impuestos</h4>
         </div>
-    </nav>
+        <span class="badge server-status px-3 py-2">
+            <i class="fa-solid fa-circle-check text-light me-1"></i> Servidor Activo (Puerto 3000)
+        </span>
+    </header>
 
     <div class="container-fluid px-4">
-        <div class="row g-4">
+        
+        <!-- Pestañas Principales -->
+        <ul class="nav nav-pills mb-4" id="pills-tab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-semibold" id="tab-clientes" data-bs-toggle="pill" data-bs-target="#content-clientes" type="button"><i class="fa-solid fa-users me-2"></i>Gestión de Clientes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-semibold" id="tab-impuestos" data-bs-toggle="pill" data-bs-target="#content-impuestos" type="button"><i class="fa-solid fa-calculator me-2"></i>Declaración e Impuestos</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="pills-tabContent">
             
-            <!-- Columna Izquierda: Formularios -->
-            <div class="col-lg-5">
-                
-                <!-- Card 1: Registro de Clientes -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="card-title mb-0">Administración de Clientes</h5>
+            <!-- PESTAÑA 1: CLIENTES -->
+            <div class="tab-pane fade show active" id="content-clientes">
+                <div class="row g-4">
+                    <!-- Formulario de Cliente -->
+                    <div class="col-lg-4">
+                        <div class="card card-custom p-3 shadow">
+                            <h5 class="fw-bold mb-3" id="formClienteTitle"><i class="fa-solid fa-user-plus me-2"></i>Nuevo Cliente</h5>
+                            <form id="formCliente">
+                                <input type="hidden" id="cliente_id_edit">
+                                <div class="mb-2">
+                                    <label class="form-label">Código de Cliente *</label>
+                                    <input type="text" class="form-control" id="codigo" required placeholder="CLI-001">
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Nombre / Razón Social *</label>
+                                    <input type="text" class="form-control" id="nombre" required placeholder="Empresa S.A.">
+                                </div>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <label class="form-label">NIT *</label>
+                                        <input type="text" class="form-control" id="nit" required placeholder="0614-000000-000-0">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">NRC</label>
+                                        <input type="text" class="form-control" id="nrc" placeholder="123456-7">
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Tipo de Contribuyente *</label>
+                                    <select class="form-select" id="tipo_empresa" required>
+                                        <option value="Persona Natural">Persona Natural</option>
+                                        <option value="Empresa Jurídica" selected>Empresa Jurídica</option>
+                                        <option value="Gran Contribuyente">Gran Contribuyente</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="form-label">Dirección</label>
+                                    <input type="text" class="form-control" id="direccion" placeholder="San Salvador">
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label">Teléfono</label>
+                                        <input type="text" class="form-control" id="telefono" placeholder="2222-0000">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="email" placeholder="contacto@empresa.com">
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-info flex-grow-1" id="btnGuardarCliente"><i class="fa-solid fa-floppy-disk me-1"></i> Guardar</button>
+                                    <button type="button" class="btn btn-outline-light" onclick="limpiarFormCliente()"><i class="fa-solid fa-rotate-left"></i></button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                    <div class="card-body">
-                        <form id="formCliente">
-                            <div class="mb-3">
-                                <label for="nombre" class="form-label">Nombre o Razón Social *</label>
-                                <input type="text" class="form-control" id="nombre" required placeholder="Ej. Comercial Los Ángeles S.A.">
+
+                    <!-- Tabla de Clientes con Acciones CRUD -->
+                    <div class="col-lg-8">
+                        <div class="card card-custom p-3 shadow">
+                            <h5 class="fw-bold mb-3"><i class="fa-solid fa-list me-2"></i>Listado de Clientes</h5>
+                            <div class="table-responsive">
+                                <table class="table table-dark-custom align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Nombre</th>
+                                            <th>NIT</th>
+                                            <th>Tipo</th>
+                                            <th>Contacto</th>
+                                            <th class="text-end">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaClientesBody"></tbody>
+                                </table>
                             </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-md-6">
-                                    <label for="nit" class="form-label">NIT *</label>
-                                    <input type="text" class="form-control" id="nit" required placeholder="0614-000000-000-0">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="nrc" class="form-label">NRC</label>
-                                    <input type="text" class="form-control" id="nrc" placeholder="123456-7">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label for="tipo_empresa" class="form-label">Tipo de Contribuyente *</label>
-                                <select class="form-select" id="tipo_empresa" required>
-                                    <option value="">Seleccione una opción...</option>
-                                    <option value="Natural">Persona Natural</option>
-                                    <option value="Jurídica">Persona Jurídica</option>
-                                    <option value="Gran Contribuyente">Gran Contribuyente</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="direccion" class="form-label">Dirección</label>
-                                <input type="text" class="form-control" id="direccion" placeholder="San Salvador">
-                            </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-md-6">
-                                    <label for="telefono" class="form-label">Teléfono</label>
-                                    <input type="text" class="form-control" id="telefono" placeholder="2222-0000">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="email" class="form-label">Correo Electrónico</label>
-                                    <input type="email" class="form-control" id="email" placeholder="correo@ejemplo.com">
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100">Guardar Cliente</button>
-                        </form>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Card 2: Cálculo de Impuesto por Período -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-success text-white">
-                        <h5 class="card-title mb-0">Registro del Impuesto del Período</h5>
-                    </div>
-                    <div class="card-body">
-                        <form id="formImpuesto">
-                            <div class="mb-3">
-                                <label for="selectCliente" class="form-label">Seleccionar Cliente *</label>
-                                <select class="form-select" id="selectCliente" required>
-                                    <option value="">Cargando clientes...</option>
-                                </select>
-                            </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-md-6">
-                                    <label for="mes" class="form-label">Mes *</label>
-                                    <input type="number" class="form-control" id="mes" min="1" max="12" required placeholder="1 - 12">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="anio" class="form-label">Año *</label>
-                                    <input type="number" class="form-control" id="anio" min="2000" max="2099" value="2026" required>
-                                </div>
-                            </div>
-                            <div class="row g-2 mb-3">
-                                <div class="col-md-6">
-                                    <label for="monto_activos" class="form-label">Monto Activos ($) *</label>
-                                    <input type="number" step="0.01" class="form-control" id="monto_activos" required placeholder="0.00">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="monto_ingresos" class="form-label">Monto Ingresos ($) *</label>
-                                    <input type="number" step="0.01" class="form-control" id="monto_ingresos" required placeholder="0.00">
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-success w-100">Calcular y Guardar Impuesto</button>
-                        </form>
-                    </div>
-                </div>
-
             </div>
 
-            <!-- Columna Derecha: Tablas de Información -->
-            <div class="col-lg-7">
-                
-                <!-- Tabla 1: Listado de Clientes registrados -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-dark text-white">
-                        <h5 class="card-title mb-0">Clientes Registrados</h5>
+            <!-- PESTAÑA 2: IMPUESTOS -->
+            <div class="tab-pane fade" id="content-impuestos">
+                <div class="row g-4">
+                    <!-- Formulario de Simulación y Registro -->
+                    <div class="col-lg-5">
+                        <div class="card card-custom p-3 shadow mb-4">
+                            <h5 class="fw-bold mb-3"><i class="fa-solid fa-calculator me-2"></i>Cálculo de Impuesto</h5>
+                            <form id="formImpuesto">
+                                <div class="mb-3">
+                                    <label class="form-label">Seleccionar Empresa *</label>
+                                    <select class="form-select" id="selectEmpresa" required>
+                                        <option value="">Cargando empresas...</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Producto / Actividad *</label>
+                                    <select class="form-select" id="selectProducto" required>
+                                        <option value="">Cargando productos...</option>
+                                    </select>
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label">Fecha Desde *</label>
+                                        <input type="date" class="form-control" id="fecha_desde" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Fecha Hasta *</label>
+                                        <input type="date" class="form-control" id="fecha_hasta" required>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Balance ($) *</label>
+                                    <input type="number" step="0.01" class="form-control" id="balance" required placeholder="0.00">
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-warning flex-grow-1" onclick="simularCalculo()"><i class="fa-solid fa-magnifying-glass-dollar me-1"></i> Simular Tarifa</button>
+                                    <button type="submit" class="btn btn-success flex-grow-1"><i class="fa-solid fa-save me-1"></i> Guardar Período</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Card de Resultado Desglosado -->
+                        <div class="card card-custom p-3 shadow" id="cardResultado" style="display: none;">
+                            <h6 class="fw-bold border-bottom border-light pb-2"><i class="fa-solid fa-square-poll-vertical me-2"></i>Desglose de la Tarifa Aplicada</h6>
+                            <div class="d-flex justify-content-between mb-1"><span class="small">Precio Base:</span> <span id="resBase" class="fw-bold">$0.00</span></div>
+                            <div class="d-flex justify-content-between mb-1"><span class="small">Excedente:</span> <span id="resExcedente">$0.00</span></div>
+                            <div class="d-flex justify-content-between mb-1"><span class="small">Bloques ($1,000):</span> <span id="resBloques">0</span></div>
+                            <div class="d-flex justify-content-between mb-1"><span class="small">Costo Bloque:</span> <span id="resAdicional">$0.00</span></div>
+                            <div class="d-flex justify-content-between border-top border-light pt-2 mt-2 fs-5"><span class="fw-bold">Impuesto Mensual:</span> <span id="resTotal" class="fw-bold">$0.00</span></div>
+                            <small class="d-block mt-2 opacity-75" id="resFormula"></small>
+                        </div>
                     </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover mb-0">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Nombre</th>
-                                        <th>NIT</th>
-                                        <th>Tipo</th>
-                                        <th>Email</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tablaClientesBody">
-                                    <!-- Datos dinámicos cargados con app.js -->
-                                </tbody>
-                            </table>
+
+                    <!-- Tabla del Historial Registrado -->
+                    <div class="col-lg-7">
+                        <div class="card card-custom p-3 shadow">
+                            <h5 class="fw-bold mb-3"><i class="fa-solid fa-clock-rotate-left me-2"></i>Historial de Períodos Guardados</h5>
+                            <div class="table-responsive">
+                                <table class="table table-dark-custom align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Cliente</th>
+                                            <th>Producto</th>
+                                            <th>Rango Fechas</th>
+                                            <th>Balance</th>
+                                            <th>Fórmula Aplicada</th>
+                                            <th class="text-end">Impuesto</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaPeriodosBody"></tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- Tabla 2: Historial de Impuestos calculados -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-secondary text-white">
-                        <h5 class="card-title mb-0">Historial de Impuestos Calculados</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover mb-0">
-                                <thead class="table-secondary">
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Cliente</th>
-                                        <th>Período</th>
-                                        <th>Activos</th>
-                                        <th>Ingresos</th>
-                                        <th>Impuesto</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tablaPeriodosBody">
-                                    <!-- Datos dinámicos cargados con app.js -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
             </div>
 
         </div>
     </div>
 
-    <!-- Bootstrap 5 JS Bundle -->
+    <!-- Script de Bootstrap Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Script de integración con el Backend -->
+    <!-- Script de Lógica Frontend Externo -->
     <script src="app.js"></script>
 </body>
 </html>

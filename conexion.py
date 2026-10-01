@@ -5,7 +5,7 @@ class Conexion:
     def __init__(self):
         self.host = 'localhost'
         self.user = 'root'
-        self.password = ''  # Cambia esto si tu MySQL tiene contraseña
+        self.password = ''
         self.database = 'db_sistema_impuestos'
         self.conexion = None
 

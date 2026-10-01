@@ -14,7 +14,7 @@ class CustomRequestHandler(SimpleHTTPRequestHandler):
         self.send_response(status)
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
 
@@ -29,6 +29,16 @@ class CustomRequestHandler(SimpleHTTPRequestHandler):
             clientes = crud_cliente.obtener_clientes()
             self._set_headers(200)
             self.wfile.write(json.dumps(clientes, default=str).encode('utf-8'))
+
+        elif path == '/clientes/empresas':
+            empresas = crud_cliente.obtener_empresas()
+            self._set_headers(200)
+            self.wfile.write(json.dumps(empresas, default=str).encode('utf-8'))
+
+        elif path == '/productos':
+            productos = crud_periodo.obtener_productos_activos()
+            self._set_headers(200)
+            self.wfile.write(json.dumps(productos, default=str).encode('utf-8'))
 
         elif path == '/periodos':
             periodos = crud_periodo.obtener_historial_periodos()
@@ -56,7 +66,28 @@ class CustomRequestHandler(SimpleHTTPRequestHandler):
             respuesta = {"mensaje": "Cliente registrado correctamente"} if resultado == "ok" else {"error": resultado}
             self.wfile.write(json.dumps(respuesta).encode('utf-8'))
 
-        elif path == '/periodo/calcular':
+        elif path == '/cliente/modificar':
+            id_cliente = data.get('id_cliente')
+            resultado = crud_cliente.modificar_cliente(id_cliente, data)
+            self._set_headers(200)
+            respuesta = {"mensaje": "Cliente actualizado correctamente"} if resultado == "ok" else {"error": resultado}
+            self.wfile.write(json.dumps(respuesta).encode('utf-8'))
+
+        elif path == '/cliente/eliminar':
+            id_cliente = data.get('id_cliente')
+            resultado = crud_cliente.eliminar_cliente(id_cliente)
+            self._set_headers(200)
+            respuesta = {"mensaje": "Cliente eliminado correctamente"} if resultado == "ok" else {"error": resultado}
+            self.wfile.write(json.dumps(respuesta).encode('utf-8'))
+
+        elif path == '/periodo/simular':
+            codigo_producto = data.get('codigo_producto')
+            balance = data.get('balance', 0)
+            resultado = crud_periodo.calcular_impuesto_tarifa(codigo_producto, balance)
+            self._set_headers(200)
+            self.wfile.write(json.dumps(resultado).encode('utf-8'))
+
+        elif path == '/periodo/guardar':
             resultado = crud_periodo.guardar_periodo(data)
             self._set_headers(200)
             self.wfile.write(json.dumps(resultado).encode('utf-8'))
