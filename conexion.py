@@ -37,9 +37,8 @@ class Conexion:
         try:
             cursor = self.conexion.cursor()
             cursor.execute(sql, datos)
-            self.conexion.commit()
+            self.conexion.commit()  # Confirma y guarda los datos en MySQL
             return 'ok'
         except Error as e:
             print(f"Error al ejecutar la consulta: {e}")
             return f'Error: {e}'
-    

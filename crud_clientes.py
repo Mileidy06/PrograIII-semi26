@@ -18,12 +18,12 @@ class crud_clientes:
             elif datos['accion'] == 'modificar':
                 sql = """
                     UPDATE cliente SET codigo=%s,nombre=%s,direccion=%s,telefono=%s,email=%s,tipo=%s
-                    WHERE idCliente=%s
+                    WHERE id_cliente=%s
                 """
                 valores = (datos['codigo'], datos['nombre'], datos['direccion'], datos['telefono'], datos['email'], datos['tipo'], datos['idCliente'])
             else:
                 sql = """
-                    DELETE FROM cliente WHERE idCliente=%s
+                    DELETE FROM cliente WHERE id_cliente=%s
                 """
                 valores = (datos['idCliente'],)
             return db.ejecutar(sql, valores)
