@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Módulo de Usuarios - Sistema de Impuestos</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-dark fw-bold mb-0">Gestión de Usuarios</h2>
+        <a href="/login.html" class="btn btn-outline-danger btn-sm">Cerrar Sesión</a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Formulario -->
+        <div class="col-lg-4">
+            <div class="card shadow border-0">
+                <div class="card-header bg-dark text-white py-3">
+                    <h5 class="card-title mb-0">Datos del Usuario</h5>
+                </div>
+                <div class="card-body">
+                    <form id="formUsuario">
+                        <input type="hidden" id="idUsuario">
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Usuario</label>
+                            <input required placeholder="Nombre de usuario" id="txtUsuario" class="form-control" type="text">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Clave</label>
+                            <input required placeholder="Contraseña" id="txtClave" class="form-control" type="text">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nombre Completo</label>
+                            <input required placeholder="Ej. Juan Pérez" id="txtNombre" class="form-control" type="text">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Dirección</label>
+                            <input placeholder="Dirección de residencia" id="txtDireccion" class="form-control" type="text">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Teléfono</label>
+                            <input placeholder="Ej. 7000-0000" id="txtTelefono" class="form-control" type="text">
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-dark">Guardar Registro</button>
+                            <button type="reset" class="btn btn-outline-secondary" onclick="resetearFormulario()">Limpiar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla y Búsqueda -->
+        <div class="col-lg-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-secondary text-white py-3">
+                    <h5 class="card-title mb-0">Lista de Usuarios Registrados</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <input type="search" placeholder="Escribe para buscar por usuario o nombre..." id="txtBusqueda" class="form-control">
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover align-middle">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Usuario</th>
+                                    <th>Nombre</th>
+                                    <th>Teléfono</th>
+                                    <th class="text-center">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaUsuarios"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let modoOperacion = 'nuevo';
+const getElem = id => document.getElementById(id);
+
+document.addEventListener('DOMContentLoaded', () => {
+    cargarUsuarios();
+    getElem('txtBusqueda').addEventListener('keyup', () => cargarUsuarios(getElem('txtBusqueda').value));
+});
+
+getElem('formUsuario').addEventListener('submit', async evento => {
+    evento.preventDefault();
+    
+    const payload = {
+        accion: modoOperacion,
+        idUsuario: getElem('idUsuario').value,
+        usuario: getElem('txtUsuario').value,
+        clave: getElem('txtClave').value,
+        nombre: getElem('txtNombre').value,
+        direccion: getElem('txtDireccion').value,
+        telefono: getElem('txtTelefono').value
+    };
+
+    const respuestaHttp = await fetch('/usuario', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    });
+    
+    const resultado = await respuestaHttp.json();
+
+    if (resultado.msg !== 'ok') {
+        alert("Aviso: " + resultado.msg);
+        return;
+    }
+
+    resetearFormulario();
+    cargarUsuarios();
+});
+
+async function cargarUsuarios(filtro = '') {
+    const respuestaHttp = await fetch(`/usuario?buscar=${encodeURIComponent(filtro)}`);
+    const registros = await respuestaHttp.json();
+    let filasHtml = '';
+
+    if (registros.length === 0) {
+        filasHtml = `<tr><td colspan="4" class="text-center text-muted">No se encontraron registros</td></tr>`;
+    } else {
+        registros.forEach(item => {
+            filasHtml += `
+                <tr>
+                    <td>${item.usuario}</td>
+                    <td>${item.nombre}</td>
+                    <td>${item.teléfono || item.telefono || 'N/D'}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-warning text-dark fw-semibold me-1" onclick='prepararEdicion(${JSON.stringify(item)})'>Editar</button>
+                        <button class="btn btn-sm btn-danger fw-semibold" onclick='removerUsuario(${JSON.stringify(item)})'>Eliminar</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+    getElem('tablaUsuarios').innerHTML = filasHtml;
+}
+
+function prepararEdicion(item) {
+    modoOperacion = 'modificar';
+    getElem('idUsuario').value = item.idUsuario;
+    getElem('txtUsuario').value = item.usuario;
+    getElem('txtClave').value = item.clave;
+    getElem('txtNombre').value = item.nombre;
+    getElem('txtDireccion').value = item.dirección || item.direccion || '';
+    getElem('txtTelefono').value = item.teléfono || item.telefono || '';
+    window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+async function removerUsuario(item) {
+    if (!confirm(`¿Estás segura de eliminar al usuario: ${item.nombre}?`)) return;
+
+    const respuestaHttp = await fetch('/usuario', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ accion: 'eliminar', idUsuario: item.idUsuario })
+    });
+    
+    const resultado = await respuestaHttp.json();
+
+    if (resultado.msg !== 'ok') {
+        alert("Error: " + resultado.msg);
+    } else {
+        cargarUsuarios();
+    }
+}
+
+function resetearFormulario() {
+    modoOperacion = 'nuevo';
+    getElem('idUsuario').value = '';
+    getElem('formUsuario').reset();
+}
+</script>
+
+</body>
+</html>
